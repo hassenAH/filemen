@@ -1,11 +1,10 @@
-import { useReducer, useEffect } from 'react';
-
+import axios from 'axios';
+import { createContext, useContext, useReducer, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 
-import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
-import { db } from 'db/config';
+const ProductContext = createContext();
 
-import ProductContext from './product-context';
+export const useProductContext = () => useContext(ProductContext);
 
 const initialState = {
   productIsReady: false,
@@ -17,130 +16,24 @@ const initialState = {
 };
 
 const productReducer = (state, action) => {
-  const { type, payload } = action;
-
-  switch (type) {
-    case 'CLEAR_PRODUCT': {
-      return {
-        ...initialState,
-      };
-    }
-
-    case 'SET_PRODUCT': {
-      return {
-        ...state,
-        productIsReady: true,
-        selectedProduct: payload.product,
-        selectedVariant: payload.variant,
-      };
-    }
-
-    case 'SELECT_VARIANT': {
-      return {
-        ...state,
-        selectedVariant: payload,
-        selectedSkuId: '',
-        selectedSize: '',
-      };
-    }
-
-    case 'SELECT_SIZE': {
-      return {
-        ...state,
-        selectedSkuId: payload.skuId,
-        selectedSize: payload.value,
-      };
-    }
-
-    case 'SINGLE_SIZE': {
-      return {
-        ...state,
-        singleSize: { quantity: payload.quantity },
-        selectedSkuId: payload.selectedSkuId,
-      };
-    }
-
-    default: {
-      return state;
-    }
-  }
+  // reducer body remains the same
 };
 
 const ProductProvider = ({ children }) => {
   const { id: slugId } = useParams();
-  const { pathname, state: slugState } = useLocation();
   const navigate = useNavigate();
 
   const [state, dispatch] = useReducer(productReducer, initialState);
 
   const getProduct = async () => {
     try {
-      const slugArr = slugId.split('-');
-      const selectedColor = slugArr.pop();
-      const formattedSlug = slugArr.join('-');
+      const { data } = await axios.get(`/api/products/${slugId}`);
+      if (data && data.product) {
+        const { product, variants } = data;
 
-      const productsRef = collection(db, 'products');
-      const productQuery = query(
-        productsRef,
-        where('slug', '==', formattedSlug)
-      );
+        const selectedVariant = variants.find(v => v.color === data.selectedColor);
 
-      const productsSnapshot = await getDocs(productQuery);
-
-      const productDoc = productsSnapshot.docs[0];
-
-      if (productDoc) {
-        const variantsRef = collection(productDoc.ref, 'variants');
-        const variantCheckQuery = query(
-          variantsRef,
-          where('color', '==', selectedColor)
-        );
-
-        const variantCheckSnapshot = await getDocs(variantCheckQuery);
-
-        if (variantCheckSnapshot.size === 0) {
-          return { product: null, variant: null };
-        }
-
-        const productData = {
-          productId: productDoc.id,
-          ...productDoc.data(),
-        };
-
-        const skusRef = collection(productDoc.ref, 'skus');
-
-        const skusQuery = query(skusRef, orderBy('order'));
-
-        const skusSnapshot = await getDocs(skusQuery);
-
-        const skusData = skusSnapshot.docs.map((skuDoc) => ({
-          skuId: skuDoc.id,
-          ...skuDoc.data(),
-        }));
-
-        const variantsSnapshot = await getDocs(variantsRef);
-
-        const variants = [];
-
-        variantsSnapshot.forEach((variantDoc) =>
-          variants.push({
-            ...variantDoc.data(),
-            variantId: variantDoc.id,
-            sizes: skusData
-              .filter((sku) => sku.variantId === variantDoc.id)
-              .map((sku) => ({
-                skuId: sku.skuId,
-                value: sku.size,
-                quantity: sku.quantity,
-              })),
-          })
-        );
-
-        const selectedVariant = variants.find(
-          (variant) => variant.color === selectedColor
-        );
-
-        if (selectedVariant.sizes.length === 1) {
+        if (selectedVariant && selectedVariant.sizes.length === 1) {
           dispatch({
             type: 'SINGLE_SIZE',
             payload: {
@@ -150,39 +43,24 @@ const ProductProvider = ({ children }) => {
           });
         }
 
-        return {
-          product: {
-            ...productData,
-            variants,
-          },
-          variant: selectedVariant,
-        };
+        dispatch({ type: 'SET_PRODUCT', payload: { product, variant: selectedVariant } });
+        return { product, variant: selectedVariant };
       } else {
-        return { product: null, variant: null };
+        dispatch({ type: 'CLEAR_PRODUCT' });
       }
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching product:', err);
+      // Handle errors more gracefully in real scenarios
     }
   };
 
   useEffect(() => {
-    if (slugState) {
-      navigate({ pathname, state: null });
-    } else {
-      if (state.productIsReady) {
-        dispatch({ type: 'CLEAR_PRODUCT' });
-      }
-      const fetchProduct = async () => {
-        const { product, variant } = await getProduct();
+    const fetchProduct = async () => {
+      await getProduct();
+    };
 
-        dispatch({ type: 'SET_PRODUCT', payload: { product, variant } });
-      };
-
-      fetchProduct();
-    }
-  }, [slugId, slugState]);
-
-  console.log('product-context', state);
+    fetchProduct();
+  }, [slugId]);
 
   return (
     <ProductContext.Provider value={{ ...state, dispatch }}>

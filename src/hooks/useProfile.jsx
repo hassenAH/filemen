@@ -1,31 +1,27 @@
 import { useState } from 'react';
-
-import { doc, updateDoc } from 'firebase/firestore';
-
-import { db } from 'db/config';
-
+import axios from 'axios'; // Make sure to import axios or your configured API instance
 import { useAuthContext } from './useAuthContext';
-
 import { handleError } from 'helpers/error/handleError';
 
 export const useProfile = () => {
   const { user, dispatch } = useAuthContext();
 
-  const userRef = doc(db, 'users', user.uid);
-
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState(null);
 
   const editProfile = async ({ name, lastName, phoneNumber = null }) => {
     setError(null);
     setIsLoading(true);
     try {
-      await updateDoc(userRef, {
+      // Assuming your API endpoint for updating user profile is '/api/users/update'
+      const response = await axios.put(`/api/users/update`, {
+        uid: user.uid,  // Assuming backend needs UID to identify the user
         name,
         lastName,
         phoneNumber,
       });
 
+      // Update the user context after a successful profile update
       dispatch({
         type: 'UPDATE_USER',
         payload: { name, lastName, phoneNumber },
@@ -33,8 +29,8 @@ export const useProfile = () => {
 
       setIsLoading(false);
     } catch (err) {
-      console.error(err);
-      setError(handleError(err));
+      console.error('Failed to update profile:', err);
+      setError(handleError(err)); // Make sure handleError is adapted for handling HTTP errors
       setIsLoading(false);
     }
   };

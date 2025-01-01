@@ -1,20 +1,12 @@
-import { useReducer, useEffect } from 'react';
+import { createContext, useContext, useReducer, useEffect } from 'react';
+import { useAuth } from '../../hooks/useAuth';
 
-import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+const AuthContext = createContext();
 
-import { auth } from 'db/config';
-import { db } from 'db/config';
-
-import AuthContext from './auth-context';
+export const useAuthContext = () => useContext(AuthContext);
 
 const initialState = {
   user: null,
-  name: null,
-  lastName: null,
-  email: null,
-  phoneNumber: null,
-  addresses: [],
   isVerified: false,
   isAdmin: false,
   authIsReady: false,
@@ -22,101 +14,47 @@ const initialState = {
 
 const authReducer = (state, action) => {
   switch (action.type) {
-    case 'AUTH_IS_READY': {
-      return {
-        user: action.payload.user,
-        name: action.payload.name,
-        lastName: action.payload.lastName,
-        email: action.payload.email,
-        phoneNumber: action.payload.phoneNumber || null,
-        addresses: action.payload.addresses || [],
-        isVerified: true,
-        isAdmin: action.payload.isAdmin || null,
-        authIsReady: true,
-      };
-    }
-
-    case 'ANONYMOUS_AUTH_IS_READY': {
-      return {
-        ...initialState,
-        user: action.payload.user,
-        authIsReady: true,
-      };
-    }
-
-    case 'LOGIN': {
+    case 'SET_USER':
       return {
         ...state,
-        user: action.payload.user,
-        name: action.payload.name,
-        lastName: action.payload.lastName,
-        email: action.payload.email,
-        phoneNumber: action.payload.phoneNumber || null,
-        addresses: action.payload.addresses || [],
+        user: action.payload,
         isVerified: action.payload.isVerified,
-        isAdmin: action.payload.isAdmin || null,
+        isAdmin: action.payload.isAdmin,
+        authIsReady: true,
       };
-    }
-
-    case 'LOGOUT': {
-      return {
-        ...initialState,
-      };
-    }
-
-    case 'UPDATE_USER': {
-      return {
-        ...state,
-        ...action.payload,
-      };
-    }
-
-    case 'UPDATE_ADDRESSES': {
-      return {
-        ...state,
-        addresses: action.payload,
-      };
-    }
-
-    default: {
+    case 'CLEAR_USER':
+      return initialState;
+    default:
       return state;
-    }
   }
 };
 
-const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
+  const { login, logout } = useAuth();  // Assuming useAuth is adapted to handle persisting login state
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const userRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userRef);
-
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          dispatch({
-            type: 'AUTH_IS_READY',
-            payload: { user, ...userData },
-          });
-        } else {
-          dispatch({
-            type: 'ANONYMOUS_AUTH_IS_READY',
-            payload: { user },
-          });
+    // Suppose your token is stored in localStorage or cookies
+    const verifyUser = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        // Call API to validate token and retrieve user data
+        try {
+          const userData = await fetchUserData(token); // Implement this function to call your backend
+          dispatch({ type: 'SET_USER', payload: userData });
+        } catch (error) {
+          console.error('Error validating token:', error);
+          localStorage.removeItem('token');  // Handle token expiration or validation failure
+          dispatch({ type: 'CLEAR_USER' });
         }
-      } else {
-        await signInAnonymously(auth);
       }
-    });
+    };
 
-    return () => unsub();
-  }, []);
-
-  console.log('auth-context', state);
+    verifyUser();
+  }, [login, logout]);  // Depend on login/logout to re-trigger verification after auth changes
 
   return (
-    <AuthContext.Provider value={{ ...state, dispatch }}>
+    <AuthContext.Provider value={{ ...state, dispatch, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

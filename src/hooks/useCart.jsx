@@ -1,9 +1,5 @@
 import { useState } from 'react';
-
-import { doc, getDoc, setDoc, deleteDoc, collection } from 'firebase/firestore';
-
-import { db } from 'db/config';
-
+import axios from 'axios';
 import { useAuthContext } from './useAuthContext';
 import { useCartContext } from './useCartContext';
 
@@ -16,280 +12,82 @@ export const useCart = () => {
   const { items, dispatch } = useCartContext();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingItemId, setLoadingItemId] = useState(false);
+  const [loadingItemId, setLoadingItemId] = useState(null);
   const [error, setError] = useState(null);
 
-  // const getCurrentStock = async (itemId) => {
-  //   const skuRef = doc(db, 'inventory', itemId);
-  //   const skuDoc = await getDoc(skuRef);
-
-  //   return skuDoc.data();
-  // };
-
-  const getCurrentStock = async (productId, skuId) => {
-    const skuRef = doc(collection(db, 'products', productId, 'skus'), skuId);
-    const skuDoc = await getDoc(skuRef);
-
-    return skuDoc.data();
-  };
-
   const addItem = async (itemToAdd) => {
-    if (isLoading) return;
+    setIsLoading(true);
     setLoadingItemId(itemToAdd.skuId);
     setError(null);
-    setIsLoading(true);
+
     try {
-      const itemInCartIndex = items.findIndex(
-        (item) => item.skuId === itemToAdd.skuId
-      );
+      const response = await axios.post('/api/cart/add-item', {
+        userId: user.uid,
+        item: itemToAdd
+      });
 
-      const itemInCart = items[itemInCartIndex];
-
-      let updatedItems = [...items];
-
-      const { quantity: availableQuantity } = await getCurrentStock(
-        itemToAdd.productId,
-        itemToAdd.skuId
-      );
-
-      let noStock;
-      let stockWasUpdated;
-
-      if (availableQuantity <= 0) {
-        if (itemInCart) {
-          updatedItems = updatedItems.filter(
-            (item) => item.skuId !== itemInCart.skuId
-          );
-          noStock = true;
-        } else {
-          throw new CustomError(
-            `Size ${itemToAdd.size.toUpperCase()} is out of stock!`
-          );
-        }
-      } else {
-        if (itemInCart) {
-          if (itemInCart.quantity > availableQuantity) {
-            itemInCart.quantity = availableQuantity;
-            stockWasUpdated = true;
-          } else if (itemInCart.quantity === availableQuantity) {
-            throw new CustomError('All available stock is currently in cart!');
-          } else {
-            const updatedItem = {
-              ...itemInCart,
-              quantity: itemInCart.quantity + 1,
-            };
-
-            updatedItems[itemInCartIndex] = updatedItem;
-          }
-        } else {
-          const addedItem = {
-            ...itemToAdd,
-            quantity: 1,
-          };
-          updatedItems.push(addedItem);
-        }
-      }
-
-      const cartTotalItemQuantity = addAllItemsQuantity(updatedItems);
-
-      const cartRef = doc(db, 'carts', user.uid);
-
-      if (cartTotalItemQuantity === 0) {
-        await deleteDoc(cartRef);
-
-        dispatch({
-          type: 'DELETE_CART',
-        });
-      } else {
-        const updatedItemsDb = updatedItems.map((item) => ({
-          skuId: item.skuId,
-          productId: item.productId,
-          variantId: item.variantId,
-          quantity: item.quantity,
-        }));
-
-        await setDoc(cartRef, {
-          items: updatedItemsDb,
-        });
-
-        dispatch({
-          type: 'UPDATE_CART',
-          payload: updatedItems,
-        });
-      }
-
-      if (noStock) {
-        throw new CustomError('This item is out of stock. Cart was updated!');
-      }
-
-      if (stockWasUpdated) {
-        throw new CustomError(
-          'Stock is limited. Item quantity in cart updated!'
-        );
-      }
-
-      setLoadingItemId(null);
+      dispatch({ type: 'UPDATE_CART', payload: response.data.items });
       setIsLoading(false);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to add item:', err);
       setError(handleError(err));
-      setLoadingItemId(null);
       setIsLoading(false);
+    } finally {
+      setLoadingItemId(null);
     }
   };
 
-  const removeItem = async (productId, skuId) => {
+  const removeItem = async (skuId) => {
+    setIsLoading(true);
     setLoadingItemId(skuId);
     setError(null);
-    setIsLoading(true);
+
     try {
-      const itemInCartIndex = items.findIndex((item) => item.skuId === skuId);
-      const itemInCart = items[itemInCartIndex];
+      const response = await axios.post('/api/cart/remove-item', {
+        userId: user.uid,
+        skuId: skuId
+      });
 
-      let updatedItems = [...items];
-
-      let noStock;
-      let stockWasUpdated;
-
-      if (itemInCart.quantity === 1) {
-        updatedItems = items.filter((item) => item.skuId !== skuId);
-      } else {
-        const { quantity: availableQuantity } = await getCurrentStock(
-          productId,
-          skuId
-        );
-
-        if (availableQuantity <= 0) {
-          updatedItems = updatedItems.filter(
-            (item) => item.skuId !== itemInCart.skuId
-          );
-          noStock = true;
-        } else if (availableQuantity < itemInCart.quantity) {
-          const updatedItem = {
-            ...itemInCart,
-            quantity: availableQuantity,
-          };
-
-          updatedItems[itemInCartIndex] = updatedItem;
-
-          stockWasUpdated = true;
-        } else {
-          const updatedItem = {
-            ...itemInCart,
-            quantity: itemInCart.quantity - 1,
-          };
-
-          updatedItems[itemInCartIndex] = updatedItem;
-        }
-      }
-
-      const cartTotalItemQuantity = addAllItemsQuantity(updatedItems);
-
-      const cartRef = doc(db, 'carts', user.uid);
-
-      if (cartTotalItemQuantity === 0) {
-        await deleteDoc(cartRef);
-
-        dispatch({
-          type: 'DELETE_CART',
-        });
-      } else {
-        const updatedItemsDb = updatedItems.map((item) => ({
-          skuId: item.skuId,
-          productId: item.productId,
-          variantId: item.variantId,
-          quantity: item.quantity,
-        }));
-
-        await setDoc(cartRef, {
-          items: updatedItemsDb,
-        });
-
-        dispatch({
-          type: 'UPDATE_CART',
-          payload: updatedItems,
-        });
-      }
-
-      if (noStock) {
-        throw new CustomError(
-          'This item is out of stock and was removed from cart!'
-        );
-      }
-
-      if (stockWasUpdated) {
-        throw new CustomError(
-          'Stock is limited. Item quantity in cart updated!'
-        );
-      }
-
-      setLoadingItemId(null);
+      dispatch({ type: 'UPDATE_CART', payload: response.data.items });
       setIsLoading(false);
     } catch (err) {
-      console.error(err);
-      setLoadingItemId(null);
+      console.error('Failed to remove item:', err);
       setError(handleError(err));
       setIsLoading(false);
+    } finally {
+      setLoadingItemId(null);
     }
   };
 
   const deleteItem = async (skuId) => {
-    setError(null);
     setIsLoading(true);
+    setError(null);
+
     try {
-      const itemInCartIndex = items.findIndex((item) => item.skuId === skuId);
-      const itemInCart = items[itemInCartIndex];
+      const response = await axios.delete(`/api/cart/delete-item/${skuId}`, {
+        data: { userId: user.uid }
+      });
 
-      const updatedItems = items.filter(
-        (item) => item.skuId !== itemInCart.skuId
-      );
-
-      const cartRef = doc(db, 'carts', user.uid);
-
-      const cartTotalItemQuantity = addAllItemsQuantity(updatedItems);
-
-      if (cartTotalItemQuantity === 0) {
-        await deleteDoc(cartRef);
-
-        dispatch({
-          type: 'DELETE_CART',
-        });
-      } else {
-        const updatedItemsDb = updatedItems.map((item) => ({
-          skuId: item.skuId,
-          productId: item.productId,
-          variantId: item.variantId,
-          quantity: item.quantity,
-        }));
-
-        await setDoc(cartRef, {
-          items: updatedItemsDb,
-        });
-
-        dispatch({
-          type: 'UPDATE_CART',
-          payload: updatedItems,
-        });
-      }
-
+      dispatch({ type: 'UPDATE_CART', payload: response.data.items });
       setIsLoading(false);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to delete item:', err);
       setError({ details: err.message });
       setIsLoading(false);
     }
   };
 
   const deleteCart = async () => {
-    const cartRef = doc(db, 'carts', user.uid);
-    await deleteDoc(cartRef);
-    dispatch({
-      type: 'DELETE_CART',
-    });
-  };
-
-  const activateCartCheck = () => {
-    dispatch({ type: 'CHECK' });
+    setIsLoading(true);
+    try {
+      await axios.delete(`/api/cart/${user.uid}`);
+      dispatch({ type: 'DELETE_CART' });
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Failed to delete cart:', err);
+      setError(handleError(err));
+      setIsLoading(false);
+    }
   };
 
   return {
@@ -297,9 +95,10 @@ export const useCart = () => {
     removeItem,
     deleteItem,
     deleteCart,
-    activateCartCheck,
     isLoading,
     loadingItemId,
     error,
   };
 };
+
+export default useCart;

@@ -1,13 +1,8 @@
 import { useState } from 'react';
-import { collection, doc, writeBatch } from 'firebase/firestore';
-
-import { db } from 'db/config';
-
+import axios from 'axios';
 import moment from 'moment';
 
-import products from 'data/dummy-products.json';
-
-export const useSeed = () => {
+export const useSeed = (products) => {  // Assume products is passed as a prop or defined elsewhere
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -16,55 +11,13 @@ export const useSeed = () => {
     setIsLoading(true);
 
     try {
-      const batch = writeBatch(db);
-      const productsRef = collection(db, 'products');
-
-      for (const product of products) {
-        const newProductRef = doc(productsRef);
-        batch.set(newProductRef, {
-          collection: product.collection,
-          description: product.description,
-          model: product.model,
-          price: product.price,
-          slug: product.slug,
-          type: product.type,
-          fit: product.fit,
-          updatedAt: moment().toDate(),
-          createdAt: moment().toDate(),
-        });
-
-        const variantsRef = collection(newProductRef, 'variants');
-        const skusRef = collection(newProductRef, 'skus');
-
-        for (const variant of product.variants) {
-          const newVariantRef = doc(variantsRef);
-          batch.set(newVariantRef, {
-            color: variant.color,
-            images: variant.images,
-            variantPrice: variant.variantPrice,
-            productId: newProductRef.id,
-            updatedAt: moment().toDate(),
-            createdAt: moment().toDate(),
-          });
-
-          for (const sku of variant.skus) {
-            const newSkusRef = doc(skusRef);
-            batch.set(newSkusRef, {
-              order: sku.order,
-              quantity: sku.quantity,
-              size: sku.size,
-              value: sku.value,
-              productId: newProductRef.id,
-              variantId: newVariantRef.id,
-            });
-          }
-        }
-      }
-
-      await batch.commit();
+      // Assuming you have an endpoint to handle product batch uploads
+      await axios.post('/api/products/batch-upload', {
+        products: products,
+      });
       setIsLoading(false);
     } catch (err) {
-      console.error(err);
+      console.error('Error uploading products:', err);
       setError(err);
       setIsLoading(false);
     }
