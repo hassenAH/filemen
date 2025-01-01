@@ -2,7 +2,7 @@ import { createContext } from 'react';
 
 const CartContext = createContext({
   items: [],
-  cartIsReady: false,
+  cartIsReady: true,
   checkInventory: true,
 });
 

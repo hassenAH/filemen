@@ -8,7 +8,6 @@ import {
   FaYoutube,
 } from 'react-icons/fa';
 
-import Newsletter from './Newsletter';
 
 import styles from './index.module.scss';
 
@@ -29,7 +28,7 @@ const Footer = () => {
           : styles.is_collection_page_s
       }`}
     >
-      {!isBigScreen && <Newsletter />}
+      {!isBigScreen }
       <div className={styles.container}>
         <div className={styles.sitemap}>
           <div className={styles.nav_wrapper}>
@@ -65,7 +64,7 @@ const Footer = () => {
           </div>
         </div>
         <div className={styles.socials_wrapper}>
-          {isBigScreen && <Newsletter />}
+          {isBigScreen }
           <div className={styles.socials}>
             <a
               href="https://www.instagram.com"

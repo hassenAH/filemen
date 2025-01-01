@@ -2,8 +2,8 @@ import { createContext, useContext, useReducer, useEffect } from 'react';
 import axios from 'axios';
 import { useAuthContext } from 'hooks/useAuthContext';
 import { useToast } from 'hooks/useToast';
+import CartContext from 'context/cart/cart-context';
 
-const CartContext = createContext();
 
 export const useCartContext = () => useContext(CartContext);
 
@@ -17,7 +17,7 @@ const cartReducer = (state, action) => {
     case 'UPDATE_CART':
       return { ...state, items: action.payload, cartIsReady: true };
     case 'CLEAR_CART':
-      return { ...initialState };
+      return { ...initialState, cartIsReady: true };
     default:
       return state;
   }
@@ -36,7 +36,7 @@ const CartProvider = ({ children }) => {
     
     const fetchCart = async () => {
       try {
-        const response = await axios.get(`/api/carts/${user.id}`);
+        const response = await axios.get(`https://filamen.com.tn/api/orders/user/${user.id}`);
         if (response.data.items && JSON.stringify(response.data.items) !== JSON.stringify(state.items)) {
           dispatch({ type: 'UPDATE_CART', payload: response.data.items });
         }

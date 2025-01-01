@@ -11,7 +11,7 @@ import styles from './index.module.scss';
 const SignUpPage = () => {
   const { state: routerState } = useLocation();
 
-  const { signUp, isLoading, error, defaultValue } = useAuth();
+  const { register, isLoading, error,success, defaultValue } = useAuth();
   const { sendToast } = useToast();
 
   const nameInput = useRef();
@@ -22,15 +22,20 @@ const SignUpPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    await signUp({
+    await register({
       name: nameInput.current.value,
       lastName: lastNameInput.current.value,
       email: emailInput.current.value,
       password: passwordInput.current.value,
     });
+    window.location.href = '/account/login';
   };
 
   useEffect(() => {
+    if (success) {
+      sendToast({ success: true, content: { message: success } });
+    }
+    
     if (error) {
       sendToast({ error: true, content: { message: error.message } });
     }

@@ -12,8 +12,7 @@ export const useAddress = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const userRef = doc(db, 'users', user.uid);
-  const checkoutSessionRef = doc(db, 'checkoutSessions', user.uid);
+ 
 
   const userAddresses = [...addresses];
 

@@ -96,11 +96,7 @@ const Navbar = ({ toggleSideNav, openCartModal }) => {
               About Us
             </Link>
           </li>
-          <li>
-            <Link className={styles.link} to="/">
-              Carreers
-            </Link>
-          </li>
+          
         </ul>
         {!isVerified && (
           <Link
@@ -146,9 +142,7 @@ const Navbar = ({ toggleSideNav, openCartModal }) => {
           </li>
         </ul>
         <ul className={styles.icons_menu}>
-          <li className={`${styles.search_icon} disabled-link`}>
-            <CgSearch />
-          </li>
+          
           <li className={styles.cart_icon} onClick={handleOpenCartModal}>
             <CartIcon />
           </li>

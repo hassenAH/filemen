@@ -10,7 +10,7 @@ export const useCheckout = () => {
   const { user } = useAuthContext();
   const { createAddress } = useAddress();
 
-  const checkoutSessionRef = doc(db, 'checkoutSessions', user.uid);
+
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);

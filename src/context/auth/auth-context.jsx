@@ -7,7 +7,7 @@ const AuthContext = createContext({
   email: null,
   phoneNumber: null,
   addresses: [],
-  isVerified: false,
+  verified: false,
   authIsReady: false,
 });
 

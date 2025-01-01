@@ -2,11 +2,18 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://filamen.com.tn/api', // Adjust this to your actual API URL
+  baseURL: 'https://filamen.com.tn/api', // Adjust this to your actual API URL
   headers: {
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+  },
 });
+
+// Function to handle logout process
+const handleLogout = () => {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  window.location.href = '/login'; // Redirect to login or public page
+};
 
 // Function to get new tokens using refresh token
 const refreshToken = async () => {
@@ -14,10 +21,11 @@ const refreshToken = async () => {
     const response = await axios.post('/api/users/refresh-token', {
       refreshToken: localStorage.getItem('refreshToken'), // Assuming you store refreshToken in localStorage
     });
-    localStorage.setItem('token', response.data.token);
+    localStorage.setItem('accessToken', response.data.accessToken);
     localStorage.setItem('refreshToken', response.data.refreshToken);
-    return response.data.token;
+    return response.data.accessToken; // Return the new access token
   } catch (error) {
+    handleLogout(); // If refreshing the token fails, log out the user
     throw new Error('Could not refresh token.');
   }
 };
@@ -25,7 +33,7 @@ const refreshToken = async () => {
 // Request Interceptor
 API.interceptors.request.use(
   config => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -36,17 +44,26 @@ API.interceptors.request.use(
   }
 );
 
-// Response Interceptor to handle token refresh
+// Response Interceptor to handle token refresh and logout
 API.interceptors.response.use(
   response => response,
   async error => {
     const originalRequest = error.config;
+
+    // Handle 401 errors (unauthorized) and attempt token refresh
     if (error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      const newToken = await refreshToken();
-      originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
-      return API(originalRequest);
+      try {
+        const newToken = await refreshToken();
+        originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+        return API(originalRequest); // Retry the original request with the new token
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+        return Promise.reject(refreshError);
+      }
     }
+
+    // If another type of error occurs, reject it
     return Promise.reject(error);
   }
 );
