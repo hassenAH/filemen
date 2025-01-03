@@ -42,6 +42,9 @@ const AccountPage = () => {
 
   const handleLogout = async () => {
     await logout();
+    setTimeout(() => {
+      window.location.reload(); // Force refresh
+    }, 1);
   };
 
   return (

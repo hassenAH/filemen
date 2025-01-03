@@ -15,7 +15,7 @@ export const useAuth = () => {
       const { data } = await API.post('/users/login', { email, password });
       localStorage.setItem('accessToken', data.accessToken);
       setSuccess('Login successful'); // Set success message
-      window.location.href = '/'; // Navigate to the home page
+       // Navigate to the home page
     } catch (err) {
       setError(err.response ? err.response.data.message : err.message || 'An error occurred');
     } finally {

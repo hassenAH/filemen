@@ -124,7 +124,7 @@ const Navbar = ({ toggleSideNav, openCartModal }) => {
         <ul className={styles.links}>
           <li>
             <NavLink className={styles.link} to="/collections/t-shirts">
-              T-shirts
+            Hoodies
             </NavLink>
           </li>
           <li>
@@ -132,7 +132,7 @@ const Navbar = ({ toggleSideNav, openCartModal }) => {
               className={styles.link}
               to="/collections/hoodies-sweatshirts"
             >
-              Hoodies
+              Jackets
             </NavLink>
           </li>
           <li>

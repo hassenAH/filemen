@@ -40,7 +40,7 @@ const NavDrawerContent = ({ toggleSideNav }) => {
               onClick={toggleSideNav}
               className={styles.link}
             >
-              T-Shirts
+              Hoodies
             </Link>
           </li>
           <li>
@@ -49,7 +49,7 @@ const NavDrawerContent = ({ toggleSideNav }) => {
               onClick={toggleSideNav}
               className={styles.link}
             >
-              Hoodies
+              Jackets
             </Link>
           </li>
           <li>

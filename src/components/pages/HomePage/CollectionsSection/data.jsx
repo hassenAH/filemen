@@ -6,22 +6,22 @@ export const COLLECTIONS = [
   {
     id: 1,
     image: tShirtCollection,
-    title: 't-shirts',
-    text: 'T-shirts & tank tops',
+    title: 'jackets',
+    text: 'Layers & Warmth',
     url: '/collections/t-shirts',
   },
   {
     id: 2,
     image: hoodiesCollection,
     title: 'hoodies',
-    text: 'Hoodies & sweatshirts',
+    text: 'Hoodies & Pants',
     url: '/collections/hoodies-sweatshirts',
   },
   {
     id: 3,
     image: accessoriesCollection,
     title: 'accessories',
-    text: 'Dad hats, bucket hats & more',
+    text: 'Comming Soon by soon',
     url: '/collections/accessories',
   },
 ];

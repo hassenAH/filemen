@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation ,useNavigate} from 'react-router-dom';
 
 import { useAuth } from 'hooks/useAuth';
 import { useToast } from 'hooks/useToast';
@@ -13,7 +13,7 @@ const SignUpPage = () => {
 
   const { register, isLoading, error,success, defaultValue } = useAuth();
   const { sendToast } = useToast();
-
+  const navigate = useNavigate(); 
   const nameInput = useRef();
   const lastNameInput = useRef();
   const emailInput = useRef();
@@ -24,11 +24,14 @@ const SignUpPage = () => {
 
     await register({
       name: nameInput.current.value,
-      lastName: lastNameInput.current.value,
+      lastname: lastNameInput.current.value,
       email: emailInput.current.value,
       password: passwordInput.current.value,
     });
-    window.location.href = '/account/login';
+    const redirectTo = '/account/login';
+    navigate(redirectTo, { replace: true });
+  
+   
   };
 
   useEffect(() => {
@@ -39,7 +42,7 @@ const SignUpPage = () => {
     if (error) {
       sendToast({ error: true, content: { message: error.message } });
     }
-  }, [error]);
+  }, [error,sendToast]);
 
   return (
     <>

@@ -22,24 +22,32 @@ const initialState = {
 
 // Auth reducer to handle authentication state changes
 const authReducer = (state, action) => {
-  console.log(state)
-  console.log(action.type)
+  
   switch (action.type) {
     case 'SET_USER':
       return {
         ...state,
         user: action.payload,
         name: action.payload.name,
-  lastName: null,
-  email: action.payload.email,
-  phoneNumber: null,
-  addresses: [],
+        lastName: action.payload.lastname,
+        email: action.payload.email,
+        phoneNumber: action.payload.phone,
+        addresses: [],
         isVerified: action.payload.verified,
-        isAdmin: action.payload.isAdmin || false,
+        isAdmin: action.payload.isAdmin ,
         authIsReady: true, // Ensure this is set to true once the user is fetched
       };
     case 'CLEAR_USER':
       return { ...initialState, authIsReady: true };
+    case 'UPDATE_USER':
+        return {
+          ...state,
+          name: action.payload.name,
+          lastName: action.payload.lastname,
+          phoneNumber: action.payload.phone,
+          authIsReady: true, 
+           
+        };
     default:
       return state;
   }
@@ -61,6 +69,7 @@ const fetchUserData = async (token) => {
     }
 
     const data = await response.json();
+    console.log(data)
     return data;
   } catch (error) {
     console.error('Error in fetchUserData:', error);

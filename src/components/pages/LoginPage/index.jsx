@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom'; // Added useNavigate
 import { useAuth } from 'hooks/useAuth';
 import { useToast } from 'hooks/useToast';
 import { Loader } from 'components/common';
@@ -7,7 +7,8 @@ import styles from './index.module.scss';
 
 const LoginPage = () => {
   const { state: routerState } = useLocation();
-  const { login, isLoading, error } = useAuth();
+  const navigate = useNavigate(); // Initialize navigate hook
+  const { login, isLoading, error, success } = useAuth();
   const { sendToast } = useToast();
   const emailInput = useRef();
   const passwordInput = useRef();
@@ -21,10 +22,21 @@ const LoginPage = () => {
   };
 
   useEffect(() => {
+    if (success) {
+      sendToast({ success: true, content: { message: success } });
+      setTimeout(() => {
+        window.location.reload(); // Force refresh
+      }, 1); 
+      const redirectTo = routerState?.from?.pathname || '/';
+      navigate(redirectTo, { replace: true });
+
+      // Refresh the page after redirection
+      
+    }
     if (error) {
       sendToast({ type: 'error', message: error });
     }
-  }, [error, sendToast]);
+  }, [success, error, sendToast, navigate, routerState]);
 
   return (
     <>
@@ -59,7 +71,7 @@ const LoginPage = () => {
                 </button>
               </form>
               <p className={styles.no_account}>
-                New to Flaakko?{' '}
+                New to Filamen ?{' '}
                 <Link to="/account/signup" state={routerState}>
                   Create account
                 </Link>
