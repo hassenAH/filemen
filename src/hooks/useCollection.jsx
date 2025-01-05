@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import axios from 'axios';  // Ensure Axios is imported
+import API from '../API/axiosConfig';  // Ensure Axios is imported
 import { v4 as uuid } from 'uuid';
 
 import { formatDiscountNumber } from 'helpers/format';
@@ -21,7 +21,7 @@ export const useCollection = () => {
     setIsLoading(true);
 
     try {
-      const endpoint = `/api/collections/${collectionName}`;
+      const endpoint = `api/products`;
       const params = {
         sortBy: sortBy.field,
         direction: sortBy.direction,
@@ -29,20 +29,20 @@ export const useCollection = () => {
         limit
       };
 
-      const { data } = await axios.get(endpoint, { params });
-
-      if (data.products.length === 0) {
+      const { data } = await API.get(endpoint);
+ console.log(data);
+      if (data.length === 0) {
         setHasMore(false);
         setIsLoading(false);
         return [];
       }
 
-      latestDoc.current = data.products[data.products.length - 1].id;
+   
 
-      const products = data.products.map(product => ({
+      const products = data.map(product => ({
         ...product,
         id: uuid(),  // Generate UUID for each product
-        allVariants: product.variants  // Assume variants are included in the response
+        
       }));
 
       setIsLoading(false);

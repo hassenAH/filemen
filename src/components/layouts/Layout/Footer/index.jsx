@@ -33,7 +33,7 @@ const Footer = () => {
         <div className={styles.sitemap}>
           <div className={styles.nav_wrapper}>
             <h4 className={styles.nav_title}>Help</h4>
-            <ul className={styles.nav}>
+            {/*<ul className={styles.nav}>
               <li>
                 <Link to="/">Help Center</Link>
               </li>
@@ -49,42 +49,28 @@ const Footer = () => {
               <li>
                 <Link to="/">Returns & Exchanges</Link>
               </li>
-            </ul>
+            </ul>*/}
           </div>
-          <div className={styles.nav_wrapper}>
-            <h4 className={styles.nav_title}>More</h4>
-            <ul className={styles.nav}>
-              <li>
-                <Link to="">About Us</Link>
-              </li>
-              <li>
-                <Link to="">Carreers</Link>
-              </li>
-            </ul>
-          </div>
+          
         </div>
         <div className={styles.socials_wrapper}>
           {isBigScreen }
           <div className={styles.socials}>
             <a
-              href="https://www.instagram.com"
+              href="https://www.instagram.com/filamenbrand/"
               target="_blank"
               rel="noreferrer"
             >
               <FaInstagram />
             </a>
-            <a href="https://tiktok.com" target="_blank" rel="noreferrer">
+            <a href="https://www.tiktok.com/@filamenbrand?lang=fr" target="_blank" rel="noreferrer">
               <FaTiktok />
             </a>
-            <a href="https://twitter.com" target="_blank" rel="noreferrer">
-              <FaTwitterSquare />
-            </a>
-            <a href="https://facebook.com" target="_blank" rel="noreferrer">
+            
+            <a href="https://facebook.com/profile.php?id=61568878031636&mibextid=wwXIfr&rdid=AsOdBGVvsnL4JeDN&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F15vj5a6L5Z%2F%3Fmibextid%3DwwXIfr" target="_blank" rel="noreferrer">
               <FaFacebookF />
             </a>
-            <a href="https://youtube.com" target="_blank" rel="noreferrer">
-              <FaYoutube />
-            </a>
+           
           </div>
         </div>
       </div>

@@ -121,7 +121,7 @@ const NavDrawerContent = ({ toggleSideNav }) => {
               {isVerified ? 'My account' : 'Login'}
             </Link>
           </li>
-          <li>
+          {/*<li>
             <Link to="/" onClick={toggleSideNav} className={styles.link}>
               <i>
                 <FaQuestionCircle />
@@ -176,7 +176,7 @@ const NavDrawerContent = ({ toggleSideNav }) => {
               </i>
               About Us
             </Link>
-          </li>
+          </li>*/}
         </ul>
       </div>
       <div className={styles.socials_container}>

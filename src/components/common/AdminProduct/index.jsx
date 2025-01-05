@@ -86,12 +86,9 @@ const AdminProduct = ({
       : (inputFiles = e.target.files);
 
     if (inputFiles.length > 0) {
-      const updatedImages = await uploadFiles('product-images', {
-        currentFiles: [...images],
-        newFiles: [...inputFiles],
-      });
+    
 
-      setImages(updatedImages);
+      setImages(images);
     }
   };
 
@@ -226,25 +223,30 @@ const AdminProduct = ({
 
   const handleProductSubmit = async (e) => {
     e.preventDefault();
-    let productData = { ...productInput };
-    productData.sizes = sizes;
-    productData.tags = tags;
-
-    if (isEditPage) {
-      productData.id = productId;
-      await editProduct({
-        productData,
-        variants,
-        currentInventoryLevels,
-        images,
-        imagesMarkedForRemoval,
-      });
-    } else {
-      await createProduct({ productData, variants, images });
+  
+    const productData = { ...productInput, sizes, tags };
+    try {
+      if (isEditPage) {
+        productData.id = productId;
+        await editProduct({
+          productDetails: productData,
+          images,
+          currentInventoryLevels,
+          imagesMarkedForRemoval,
+        });
+      } else {
+        await createProduct({
+          productDetails: productData,
+          images, // Pass the selected images
+        });
+      }
+  
+      setNavigation(true);
+    } catch (err) {
+      console.error('Error submitting product:', err);
     }
-
-    setNavigation(true);
   };
+  
 
   useEffect(() => {
     if (navigation && !error) {
@@ -319,16 +321,7 @@ const AdminProduct = ({
             handleSizesInput={handleSizesInput}
             handleProductSubmit={handleProductSubmit}
           />
-          <Variants
-            productInput={productInput}
-            variants={variants}
-            sizes={sizes}
-            images={images}
-            handleAddVariant={handleAddVariant}
-            handleEditVariantCount={handleEditVariantCount}
-            handleDeleteVariant={handleDeleteVariant}
-            handleVariantEditSubmit={handleVariantEditSubmit}
-          />
+          
           <div className={styles.buttons_wrapper}>
             <Button
               type="submit"
