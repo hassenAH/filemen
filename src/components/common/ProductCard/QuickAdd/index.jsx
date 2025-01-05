@@ -1,4 +1,5 @@
 import { Swiper, SwiperSlide } from 'swiper/react';
+
 import { FaPlus } from 'react-icons/fa';
 
 import styles from './index.module.scss';
@@ -17,38 +18,6 @@ const QuickAdd = ({
   bottomContainerClassName,
   sizesSliderClassName,
 }) => {
-  const renderSize = (sku) => (
-    <div
-      key={sku.skuId}
-      onClick={
-        !isLoading && sku.quantity > 0
-          ? () => handleAddItem({ skuId: sku.skuId, size: sku.size })
-          : undefined
-      }
-      className={`
-        ${sku.quantity > 0 ? styles.size : styles.size_no_quantity}
-        ${isLoading && styles.no_show}`}
-    >
-      {sku.size}
-    </div>
-  );
-
-  const renderSwiperSlide = (sku) => (
-    <SwiperSlide
-      key={sku.skuId}
-      onClick={
-        !isLoading && sku.quantity > 0
-          ? () => handleAddItem({ skuId: sku.skuId, size: sku.size })
-          : undefined
-      }
-      className={`
-        ${sku.quantity > 0 ? styles.size : styles.size_no_quantity}
-        ${isLoading && styles.no_show}`}
-    >
-      {sku.size}
-    </SwiperSlide>
-  );
-
   if (isSmallContainer) {
     return (
       <>
@@ -56,20 +25,73 @@ const QuickAdd = ({
           slidesPerView="auto"
           spaceBetween={5}
           nested={nested}
-          centeredSlides={true}
+          centeredSlides={skus.length === 1}
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
           className={sizesSliderClassName}
         >
-          {skus.length > 0
-            ? skus.map(renderSwiperSlide)
-            : <div className={styles.no_sizes}>No sizes available</div>}
+          {skus.length > 1 ? (
+            <div
+              className={`${styles.sizes_wrapper} ${
+                isLoading ? styles.center : undefined
+              }`}
+            >
+              {skus.map((sku) => (
+                <SwiperSlide
+                  key={sku.skuId}
+                  onClick={
+                    !isLoading && sku.quantity > 0
+                      ? () =>
+                          handleAddItem({ skuId: sku.skuId, size: sku.size })
+                      : undefined
+                  }
+                  className={`
+                    ${
+                      sku.quantity > 0 ? styles.size : styles.size_no_quantity
+                    } ${isLoading && styles.no_show}`}
+                >
+                  {sku.size}
+                </SwiperSlide>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.single_size_wrapper}>
+              {skus.map((singleSku) => (
+                <SwiperSlide
+                  key={singleSku.skuId}
+                  onClick={
+                    !isLoading && singleSku.quantity > 0
+                      ? () =>
+                          handleAddItem({
+                            skuId: singleSku.skuId,
+                            size: singleSku.size,
+                          })
+                      : undefined
+                  }
+                  className={`${
+                    singleSku.quantity > 0
+                      ? styles.single_size
+                      : styles.single_size_no_quantity
+                  } ${isLoading && styles.no_show} ${
+                    isSmallContainer ? styles.is_small_container : undefined
+                  }`}
+                >
+                  Add To Bag
+                </SwiperSlide>
+              ))}
+            </div>
+          )}
         </Swiper>
-        {isLoading && <div className={styles.loader} />}
+        {isLoading && (
+          <div
+            className={`${styles.loader} ${
+              isSmallContainer ? styles.is_small_container : undefined
+            }`}
+          />
+        )}
       </>
     );
   }
-
   return (
     <div className={containerClassName}>
       <div className={wrapperClassName}>
@@ -80,24 +102,61 @@ const QuickAdd = ({
           </span>
         </div>
         <div className={bottomContainerClassName}>
-          {skus.length > 0 ? (
-            <div className={styles.sizes_wrapper}>
-              {skus.map(renderSize)}
+          {skus.length > 1 ? (
+            <div
+              className={`${styles.sizes_wrapper} ${
+                isLoading ? styles.center : undefined
+              }`}
+            >
+              {skus.map((sku) => (
+                <div
+                  key={sku.skuId}
+                  onClick={
+                    !isLoading && sku.quantity > 0
+                      ? () =>
+                          handleAddItem({ skuId: sku.skuId, size: sku.size })
+                      : undefined
+                  }
+                  className={`
+                    ${
+                      sku.quantity > 0 ? styles.size : styles.size_no_quantity
+                    } ${isLoading && styles.no_show}`}
+                >
+                  {sku.size}
+                </div>
+              ))}
+              {isLoading && <div className={styles.loader}></div>}
             </div>
           ) : (
-            <div className={styles.no_sizes}>No sizes available</div>
+            <div className={styles.single_size_wrapper}>
+              {skus.map((singleSku) => (
+                <div
+                  key={singleSku.skuId}
+                  onClick={
+                    !isLoading && singleSku.quantity > 0
+                      ? () =>
+                          handleAddItem({
+                            skuId: singleSku.skuId,
+                            size: singleSku.size,
+                          })
+                      : undefined
+                  }
+                  className={`${
+                    singleSku.quantity > 0
+                      ? styles.single_size
+                      : styles.single_size_no_quantity
+                  } ${isLoading && styles.no_show}`}
+                >
+                  Add To Bag
+                </div>
+              ))}
+              {isLoading && <div className={styles.loader}></div>}
+            </div>
           )}
-          {isLoading && <div className={styles.loader}></div>}
         </div>
       </div>
     </div>
   );
-};
-
-QuickAdd.defaultProps = {
-  skus: [],
-  isSmallContainer: false,
-  isLoading: false,
 };
 
 export default QuickAdd;

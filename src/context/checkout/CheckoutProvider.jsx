@@ -1,8 +1,11 @@
 import { createContext, useContext, useReducer, useEffect } from 'react';
-import axios from 'axios';  // Ensure Axios is imported
-import { useAuthContext } from 'hooks/useAuthContext';
 
-const CheckoutContext = createContext();
+import { useAuthContext } from 'hooks/useAuthContext';
+import CheckoutContext from 'context/checkout/checkout-context';
+import API from '../../API/axiosConfig';
+
+
+
 
 export const useCheckoutContext = () => useContext(CheckoutContext);
 
@@ -36,7 +39,7 @@ const CheckoutProvider = ({ children }) => {
 
     const getCheckoutSession = async () => {
       try {
-        const response = await axios.get(`/api/checkout/${user.uid}`);
+        const response = await API.get(`/checkout/${user.uid}`);
         if (response.data) {
           dispatch({
             type: 'UPDATE_CHECKOUT_SESSION',

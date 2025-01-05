@@ -1,8 +1,9 @@
-import axios from 'axios';
+
 import { createContext, useContext, useReducer, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import ProductContext from 'context/product/product-context';
+import API from '../../API/axiosConfig';
 
-const ProductContext = createContext();
 
 export const useProductContext = () => useContext(ProductContext);
 
@@ -27,7 +28,7 @@ const ProductProvider = ({ children }) => {
 
   const getProduct = async () => {
     try {
-      const { data } = await axios.get(`/api/products/${slugId}`);
+      const { data } = await API.get(`/products/${slugId}`);
       if (data && data.product) {
         const { product, variants } = data;
 

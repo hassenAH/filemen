@@ -21,7 +21,7 @@ export const useCollection = () => {
     setIsLoading(true);
 
     try {
-      const endpoint = `api/products`;
+      const endpoint = `/products`;
       const params = {
         sortBy: sortBy.field,
         direction: sortBy.direction,
